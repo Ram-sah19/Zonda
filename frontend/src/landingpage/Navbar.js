@@ -1,9 +1,19 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setIsDropdownOpen(false);
+  };
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -141,11 +151,13 @@ function Navbar() {
               </span>
             </Link>
 
-            {/* User Profile */}
-            <div className="dropdown">
+            {/* User Profile Dropdown */}
+            <div className="dropdown" style={{ position: "relative" }}>
               <button 
                 className="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center"
                 type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                 style={{
                   width: "40px",
                   height: "40px",
@@ -158,6 +170,70 @@ function Navbar() {
               >
                 <i className="bi bi-person text-dark" style={{ fontSize: "17px" }}></i>
               </button>
+
+              {isDropdownOpen && (
+                <div 
+                  className="dropdown-menu dropdown-menu-end show border-0 shadow"
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "45px",
+                    display: "block",
+                    minWidth: "180px",
+                    borderRadius: "12px",
+                    padding: "8px 0",
+                    animation: "fadeInUp 0.2s ease-out",
+                    zIndex: 1050
+                  }}
+                >
+                  {user ? (
+                    <>
+                      <div className="px-3 py-2 border-bottom mb-1">
+                        <p className="mb-0 text-muted" style={{ fontSize: "11px" }}>Logged in as</p>
+                        <p className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: "13px" }}>{user.name}</p>
+                      </div>
+                      <Link 
+                        className="dropdown-item d-flex align-items-center gap-2 py-2" 
+                        to="/profile"
+                        style={{ fontSize: "13px" }}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="bi bi-person-badge text-muted"></i>
+                        Profile
+                      </Link>
+                      <button 
+                        className="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" 
+                        onClick={handleLogout}
+                        style={{ fontSize: "13px", width: "100%", textAlign: "left", background: "none", border: "none" }}
+                      >
+                        <i className="bi bi-box-arrow-right"></i>
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link 
+                        className="dropdown-item d-flex align-items-center gap-2 py-2" 
+                        to="/login"
+                        style={{ fontSize: "13px" }}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="bi bi-box-arrow-in-right text-muted"></i>
+                        Login
+                      </Link>
+                      <Link 
+                        className="dropdown-item d-flex align-items-center gap-2 py-2" 
+                        to="/signup"
+                        style={{ fontSize: "13px" }}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="bi bi-person-plus text-muted"></i>
+                        Sign Up
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
