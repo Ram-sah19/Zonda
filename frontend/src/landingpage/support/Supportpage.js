@@ -154,9 +154,9 @@ const Supportpage = () => {
               <div className="d-flex align-items-start gap-3 mb-4">
                 <div className="fs-5 text-primary"><i className="bi bi-geo-alt"></i></div>
                 <div>
-                  <h6 className="fw-bold mb-1">Headquarters</h6>
-                  <p className="mb-0 text-light-emphasis" style={{ fontSize: "13px", color: "#cbd5e1" }}>
-                    Zonda Inc, Suite 400, Innovation Parkway, Tech District, San Francisco, CA
+                  <h6 className="fw-bold mb-1 " >Headquarters</h6>
+                  <p className="mb-0 " style={{ fontSize: "13px", color: "#8a8a8aff" }}>
+                    Zonda Inc, Suite 400, Innovation Parkway, Tech District, Bangalore 
                   </p>
                 </div>
               </div>
@@ -164,8 +164,8 @@ const Supportpage = () => {
               <div className="d-flex align-items-start gap-3 mb-4">
                 <div className="fs-5 text-primary"><i className="bi bi-clock"></i></div>
                 <div>
-                  <h6 className="fw-bold mb-1">Business Hours</h6>
-                  <p className="mb-0 text-light-emphasis" style={{ fontSize: "13px", color: "#cbd5e1" }}>
+                  <h6 className="fw-bold mb-1 ">Business Hours</h6>
+                  <p className="mb-0 " style={{ fontSize: "13px", color: "#8a8a8aff" }}>
                     Monday - Friday: 9:00 AM - 6:00 PM PST<br />
                     Saturday: 10:00 AM - 4:00 PM PST
                   </p>
@@ -175,14 +175,14 @@ const Supportpage = () => {
               <div className="border-top border-secondary pt-4 mt-2">
                 <h5 className="fw-bold mb-3">Frequently Asked Questions</h5>
                 <div className="mb-3">
-                  <h6 className="fw-semibold text-warning mb-1" style={{ fontSize: "13px" }}>How can I track my order?</h6>
-                  <p className="text-light-emphasis mb-0" style={{ fontSize: "12px", color: "#cbd5e1" }}>
+                  <h6 className="fw-semibold  mb-1" style={{ fontSize: "13px", color: "#eec603ff" }}>How can I track my order?</h6>
+                  <p className=" mb-0" style={{ fontSize: "12px", color: "#8a8a8aff" }}>
                     Use the tracking number sent to your email or check the Order History in your Profile menu.
                   </p>
                 </div>
                 <div>
-                  <h6 className="fw-semibold text-warning mb-1" style={{ fontSize: "13px" }}>What is your return policy?</h6>
-                  <p className="text-light-emphasis mb-0" style={{ fontSize: "12px", color: "#cbd5e1" }}>
+                  <h6 className="fw-semibold  mb-1" style={{ fontSize: "13px", color: "#eec603ff" }}>What is your return policy?</h6>
+                  <p className=" mb-0" style={{ fontSize: "12px", color: "#8a8a8aff" }}>
                     We offer a 30-day hassle-free return window for all unopened products with receipt proof.
                   </p>
                 </div>
