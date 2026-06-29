@@ -117,9 +117,9 @@ zonda/
 
 ---
 
-## ✨ Features Spotlight
+## ✨ Features & Functionalities
 
-### 1. Auto-Sliding Banner Hero (`Hero.js`)
+### 1. Auto-Sliding Promotional Hero Banner (`Hero.js`)
 * **Responsive Multi-Item View**: Displays 3 banner images at a time on desktop, 2 on tablets, and wraps to 1 banner on mobile screens.
 * **Uniform Layout Aspect Ratios**: All banners share the exact same height and width, and use `object-fit: cover` to avoid image squishing.
 * **Smart Navigation**: Includes custom-styled next/prev arrow buttons and responsive pill-shaped indicators.
@@ -188,7 +188,7 @@ The frontend client codebase was recently migrated from TypeScript to **Standard
 ### Prerequisites
 * **Node.js** (v18+ recommended)
 * **npm** (v9+ recommended)
-* **MongoDB Atlas** account (or local MongoDB database instance)
+* **MongoDB Atlas** database connection string
 
 ---
 
@@ -203,13 +203,13 @@ The frontend client codebase was recently migrated from TypeScript to **Standard
    ```bash
    npm install
    ```
-3. Create a `.env` file in the root of the `/backend` folder and define your database credentials:
+3. Create a `.env` file in the root of `/backend` and define your credentials:
    ```env
    PORT=5000
    MONGO_URI=your_mongodb_atlas_connection_string
    JWT_SECRET=your_jwt_secret_key
    ```
-4. Start the backend dev server:
+4. Start the backend clustered dev server:
    ```bash
    npm start
    ```
