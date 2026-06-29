@@ -4,6 +4,7 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
+  becomeSeller,
 } = require("../controller/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -11,5 +12,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.post("/signup", registerUser);
 router.post("/login", loginUser);
 router.get("/me", authMiddleware, getUserProfile);
+router.put("/become-seller", authMiddleware, becomeSeller);
 
 module.exports = router;

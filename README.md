@@ -1,31 +1,118 @@
 # Zonda — Full-Stack E-Commerce Application
 
-Zonda is a modern, high-performance, full-stack e-commerce web application built using **React** for the user interface and **Express / Node.js** for the backend API, powered by **MongoDB** for data persistence.
+Zonda is a modern, high-performance, full-stack e-commerce web application featuring a decoupled client-server architecture:
+*   **Frontend**: A responsive Single Page Application (SPA) built using **React**, styled with **Bootstrap 5.3** and custom CSS variables for premium themes and micro-animations. Routing is handled via **React Router DOM**.
+*   **Backend**: A high-availability API built with **Node.js** and **Express**, utilizing **Node Clustering** for multi-core load balancing, managing data persistence in **MongoDB Atlas** via **Mongoose**, and handling authentication using JWTs.
 
 ---
 
-## 📁 Project Structure
+## 🏗️ System Architecture & Design
 
-The project is structured into two main workspaces:
+```mermaid
+graph TD
+    subgraph Client [Frontend - React SPA]
+        A[index.html] --> B[index.js Entrypoint]
+        B --> C[BrowserRouter]
+        C --> D[AuthProvider & CartProvider]
+        D --> E[Navbar / Footer Shared Layout]
+        D --> F[Routes & Views]
+        F --> F1[Homepage /]
+        F --> F2[Productpage /products]
+        F --> F3[Cartpage /cart]
+        F --> F4[Login /login]
+        F --> F5[Signup /signup]
+        F --> F6[Profile /profile]
+    end
+
+    subgraph Server [Backend - Express API Cluster]
+        G[server.js Entrypoint] --> H[Cluster Master Process]
+        H -->|Fork Workers| I[Worker Processes 1-N]
+        I --> J[CORS & Body Parser]
+        I --> K[AuthRoutes /api/auth]
+        I --> L[CartRoutes /api/cart]
+        K --> M[authController]
+        L --> N[cartController]
+        M --> O[userSchema]
+        N --> P[Cart model]
+        O --> Q[(MongoDB Atlas)]
+        P --> Q
+    end
+
+    F2 -.->|Add To Cart API| L
+    F3 -.->|Load/Edit Cart API| L
+    F4 -.->|Auth Request| K
+```
+
+---
+
+## 📁 Directory Structure
+
+The project separates the full-stack codebase into `frontend` and `backend` workspaces:
 
 ```text
 zonda/
-├── backend/          # Express.js REST API & Database Models
-│   ├── config/       # Database connection configs
-│   ├── .env          # Server environment configurations
-│   ├── server.js     # API entry point
-│   └── package.json  # Node dependencies & scripts
+├── backend/
+│   ├── config/
+│   │   ├── db.js              # Database connection & seed synchronization
+│   │   └── seedProducts.js    # Default seed product registry data
+│   ├── controller/
+│   │   ├── authController.js  # Registration, login & profile API actions
+│   │   └── cartController.js  # Add, get, update, remove, and clear cart actions
+│   ├── middleware/
+│   │   └── authMiddleware.js  # JWT validation & user attachment middleware
+│   ├── model/
+│   │   ├── Cart.js            # User shopping cart Mongoose schema
+│   │   ├── Product.js         # Product Mongoose schema
+│   │   └── userSchema.js      # User registration & hashed password Mongoose schema
+│   ├── routes/
+│   │   ├── authRoutes.js      # Auth API mappings (/signup, /login, /me, /become-seller)
+│   │   ├── cartRoutes.js      # Cart API mappings (/add, /update, /remove/:id)
+│   │   └── productRoutes.js   # Product API mappings
+│   ├── .env                   # Server environment variables (DB URI, JWT secret)
+│   ├── server.js              # Express app config & master clustering entry point
+│   └── package.json           # Node scripts and dependencies
 │
-└── frontend/         # React.js SPA (Single Page Application)
-    ├── public/       # Static assets (HTML template, media files)
-    ├── src/          # React components, styles, & state logic
+└── frontend/
+    ├── public/
+    │   ├── media/             # Image resources & product assets
+    │   └── index.html         # Main HTML markup
+    ├── src/
+    │   ├── context/
+    │   │   ├── AuthContext.js # Auth global provider (tokens, login, logout states)
+    │   │   └── CartContext.js # Cart global provider (cart items, counts, sync logic)
     │   ├── landingpage/
+    │   │   ├── about/
+    │   │   │   ├── Aboutpage.js   # About page (company story and values)
+    │   │   │   └── Team.js        # Team showcase component
+    │   │   ├── deal/
+    │   │   │   ├── Branddeal.js   # Brand partnership spotlight cards
+    │   │   │   └── Dealpage.js    # Flash deals with active countdown timer
     │   │   ├── home/
-    │   │   │   ├── Hero.js   # Banner Slider/Carousel
-    │   │   │   └── Brand.js  # Brands Spotlight Grid
-    │   │   └── Navbar.js
-    │   └── index.css # Global stylesheets & micro-animations
-    └── package.json  # Frontend scripts & dependencies
+    │   │   │   ├── Brand.js       # Partner brand spotlights
+    │   │   │   ├── Feature.js     # Featured products catalog
+    │   │   │   ├── Hero.js        # Interactive hero carousel
+    │   │   │   ├── Homepage.js    # Landing page aggregator
+    │   │   │   └── Suggest.js     # "Recommended For You" carousel/cards
+    │   │   ├── product/
+    │   │   │   ├── BrandStore.js  # Dedicated official brand stores
+    │   │   │   ├── ProductDetails.js # Dynamic product details page with specs
+    │   │   │   └── Productpage.js # Full catalog with filtering & search
+    │   │   ├── seller/
+    │   │   │   ├── Sellerpage.js  # Seller dashboard for publishing/editing listings
+    │   │   │   ├── Sellerdetails.js
+    │   │   │   └── Product.js
+    │   │   ├── singup/
+    │   │   │   ├── Cartpage.js    # Cart dashboard, totals, and checkout flow
+    │   │   │   ├── Login.js       # User login screen with eye toggle
+    │   │   │   ├── Profilepage.js # User profile dashboard
+    │   │   │   └── Singup.js      # Registration page with eye toggles
+    │   │   ├── support/
+    │   │   │   └── Supportpage.js # Support forms and FAQs
+    │   │   ├── Footer.js          # Premium website footer
+    │   │   └── Navbar.js          # Sticky blur-backdrop header & dynamic badge
+    │   ├── index.css              # Typography, themes and global CSS variables
+    │   └── index.js               # React SPA router bootstrap & provider wrapper
+    └── package.json           # Frontend scripts and dependencies
 ```
 
 ---
@@ -34,39 +121,65 @@ zonda/
 
 ### 1. Auto-Sliding Banner Hero (`Hero.js`)
 * **Responsive Multi-Item View**: Displays 3 banner images at a time on desktop, 2 on tablets, and wraps to 1 banner on mobile screens.
-* **Uniform Layout Aspect Ratios**: All banners share the exact same height and width, and use `object-fit: cover` to avoid image squishing or distortion.
-* **Smooth Animations**: Animated sliding transition powered by cubic-bezier transforms.
-* **Smart Navigation**: Includes custom-styled next/prev arrow buttons and responsive pill-shaped indicators at the bottom.
+* **Uniform Layout Aspect Ratios**: All banners share the exact same height and width, and use `object-fit: cover` to avoid image squishing.
+* **Smart Navigation**: Includes custom-styled next/prev arrow buttons and responsive pill-shaped indicators.
 * **Auto-Play**: Automatically cycles through images every 5 seconds.
 
-### 2. Spotlight Brands Grid (`Brand.js`)
-* **Rectangle Brand Cards**: Clean rectangular cards with subtle border outlines and soft shadows.
-* **Grouped 3-by-3 Grid Layout**: Brands are arranged in a structured layout of 3 columns per row (creating two balanced rows of 3 on desktop), scaling beautifully down to smaller viewports.
-* **Full-Cover Image Headers**: Image containers are optimized to stretch promo banners (`object-fit: cover`) to fill the header bounds cleanly without border gaps.
-* **Rich Card Content**: Displays comprehensive card details (Brand Name, Sub-Description, Selling Price, Original Price, and Green Discount badge).
-* **Self-Contained Micro-Animations**: Interactive hover styling (translate y-axis lift, border highlight, and box-shadow depth increase) written directly using inline React handlers to keep card components independent.
+### 2. Spotlight Brands Grid (`Brand.js` & `BrandStore.js`)
+* **Spotlight Grids**: Interactive rectangular brand cards with subtle border outlines and soft shadows.
+* **Official Brand Stores**: Supports navigation to dedicated pages (`/brand/:brandName`) showcasing filtered products and customized themes.
+* **Rich Card Content**: Displays brand details, custom gradient backgrounds, and selling tags.
 
-### 3. Dynamic Product Catalog (`Feature.js`)
-* **10-Category Filter Bar**: Dynamic horizontal scroll pill list that filters products in real-time (Smartphones, Laptops, Audio, Smartwatches, TVs, Gaming, Home Appliances, Cameras, Accessories, Monitors, plus an "All Products" option).
-* **Complete Product Cards**: Includes detailed product pricing (current price vs. original strikethrough price), ratings (rendered dynamically using SVG star arrays), and eye-catching tags ("Best Seller", "50% OFF", etc.).
-* **Advanced Visual Effects**: Card hover lifts alongside secondary image-zoom transitions.
-* **Clean Fallbacks**: Includes high-resolution imagery links and local catalog mappings so it works instantly with zero broken links.
+### 3. Dynamic Product Catalog (`Productpage.js` & `ProductDetails.js`)
+* **10-Category Filter Bar**: Filters products in real-time (Smartphones, Laptops, Audio, Smartwatches, TVs, Gaming, Home Appliances, Cameras, Accessories, Monitors, plus an "All Products" option).
+* **Advanced Visual Effects**: Card hover lifts alongside image-zoom transitions.
+* **Dynamic Product Details**: Product-specific pages (`/products/:id`) featuring rating breakdowns, active specs lists, stock alerts, a quantity selector, and related product recommendations.
 
-### 4. Promotion & Brand Benefits Showcase (`Interesting.js`)
-* **Split Layout**: Left side contains an attention-grabbing, dark-themed gradient promo banner card for limited-time clearance deals. Right side displays a grid of four brand benefit highlights.
-* **Benefit Metrics**: Standard e-commerce selling points (Free Fast Delivery, Secure Payments, Easy Returns, 24/7 Dedicated Support) with customized, sleek SVG vector icons.
+### 4. Interactive Seller Dashboard (`Sellerpage.js`)
+* **Onboarding Flow**: Allows standard customers to upgrade their profile to a seller profile with a single click.
+* **Inventory Control Center**: Allows sellers to publish new products (with titles, category selections, pricing, descriptions, stock inventory count, and image URLs or Base64 file uploads) and edit or delete their existing listings in real-time.
 
-### 5. Recommendation System (`Suggest.js`)
-* **Personalized Product Feed**: Suggests products related to user interest in real-time.
-* **Compact Cards**: Shorter cards with quick "Add to Cart" CTA buttons, visual match labels (e.g. "Best Match", "High Rated"), and hover-lift transformations.
+### 5. Shopping Cart & Flash Deals (`Cartpage.js` & `Dealpage.js`)
+* **Global Context Management**: Syncs addition, updates, removals, and checkout simulation with MongoDB.
+* **Real-time Countdown**: `Dealpage.js` simulates active lightning deals with hours/minutes/seconds countdown hooks.
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack & Refactoring
 
-* **Frontend**: React 19, React Router v7, Bootstrap 5 (CDN), Vanilla CSS3.
-* **Backend**: Node.js, Express.js (v5), Mongoose, MongoDB Atlas.
-* **Security & Utility**: JSON Web Tokens (JWT), Bcrypt, CORS, Cookie-Parser, Dotenv.
+### Language Migration
+The frontend client codebase was recently migrated from TypeScript to **Standard JavaScript (ES6 / React JSX)**.
+- All types, interface definitions (`Product`, `User`, `CartItem` in `types.ts`), React generic states, parameter assertions, and TSX files have been cleaned up and replaced with modular, lightweight JS/JSX structures.
+- Removed TypeScript compile dependencies (`typescript`, `@types/react`, `@types/react-dom`, `@types/node`) and cleared the `tsconfig.json` configuration file to streamline the webpack compilation step.
+
+### Clustering & Seeding Synchronization (Backend)
+- Spawns concurrent worker processes using the Node `cluster` module matching the machine's CPU core capacity to optimize performance.
+- Implements concurrent seeding race-condition safety inside `backend/config/db.js`. If multiple workers attempt to seed products simultaneously on startup, duplicate key errors (`E11000`) are caught gracefully, preventing workers from crashing and ensuring seamless initialization.
+
+---
+
+## 📡 API Endpoints Spec
+
+### Auth API (`/api/auth`)
+* `POST /signup` - Registers a new user, hashes password, saves to DB, and returns a JWT token.
+* `POST /login` - Matches credentials and returns a JWT token.
+* `GET /me` - Returns logged-in user profile parameters (requires authentication).
+* `PUT /become-seller` - Upgrades logged-in user profile to a seller profile (requires authentication).
+
+### Cart API (`/api/cart`)
+* `GET /` - Fetches authenticated user's cart (creates one if none exists).
+* `POST /add` - Appends item or increments quantity if item already exists.
+* `PATCH /update` - Modifies quantity values.
+* `DELETE /remove/:productId` - Removes product.
+* `DELETE /clear` - Empties the cart array (checkout simulation).
+
+### Products API (`/api/products`)
+* `GET /` - Retrieves all products.
+* `GET /:id` - Retrieves a specific product by ID.
+* `GET /seller/me` - Retrieves products published by the logged-in seller.
+* `POST /` - Publishes a new product listing (requires seller privileges).
+* `PUT /:id` - Updates a product listing (requires seller privileges).
+* `DELETE /:id` - Deletes a product listing (requires seller privileges).
 
 ---
 
@@ -94,10 +207,11 @@ zonda/
    ```env
    PORT=5000
    MONGO_URI=your_mongodb_atlas_connection_string
+   JWT_SECRET=your_jwt_secret_key
    ```
 4. Start the backend dev server:
    ```bash
-   npm run dev
+   npm start
    ```
    *(Runs on http://localhost:5000)*
 

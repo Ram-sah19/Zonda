@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
-function Navbar() {
+const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { cartCount } = useCart();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate("/products");
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -19,6 +31,7 @@ function Navbar() {
     { name: "Home", path: "/" },
     { name: "Products", path: "/products" },
     { name: "Deals", path: "/deals" },
+    { name: user?.isSeller ? "Seller Dashboard" : "Become a Seller", path: "/seller" },
     { name: "About Us", path: "/Aboutpage" },
     { name: "Contact", path: "/contact" }
   ];
@@ -39,7 +52,7 @@ function Navbar() {
         {/* Brand Logo */}
         <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
           <img
-            src="media/logo.png"
+            src="/media/logo.png"
             alt="Logo"
             style={{ 
               height: "45px", 
@@ -72,7 +85,7 @@ function Navbar() {
               return (
                 <li className="nav-item" key={link.name}>
                   <Link 
-                    className={`nav-link px-3 py-2 fw-semibold rounded-3 transition-all`} 
+                    className="nav-link px-3 py-2 fw-semibold rounded-3 transition-all" 
                     to={link.path}
                     style={{
                       color: isActive ? "#0d6efd" : "#475569",
@@ -103,30 +116,34 @@ function Navbar() {
           {/* Search, Cart & Profile Actions */}
           <div className="d-flex align-items-center gap-3 mt-3 mt-lg-0">
             {/* Search Box */}
-            <div 
-              className="d-flex align-items-center bg-light rounded-pill px-3 py-1.5 border"
-              style={{ 
-                width: "200px", 
-                borderColor: isSearchFocused ? "#0d6efd" : "#e2e8f0", 
-                boxShadow: isSearchFocused ? "0 0 0 3px rgba(13, 110, 253, 0.15)" : "none",
-                transition: "all 0.3s ease" 
-              }}
-            >
-              <i className="bi bi-search text-muted me-2" style={{ fontSize: "14px" }}></i>
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                className="border-0 bg-transparent"
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
+            <form onSubmit={handleSearchSubmit} className="mb-0">
+              <div 
+                className="d-flex align-items-center bg-light rounded-pill px-3 py-1.5 border"
                 style={{ 
-                  fontSize: "13px", 
-                  outline: "none", 
-                  width: "100%",
-                  color: "#1e293b" 
-                }} 
-              />
-            </div>
+                  width: "200px", 
+                  borderColor: isSearchFocused ? "#0d6efd" : "#e2e8f0", 
+                  boxShadow: isSearchFocused ? "0 0 0 3px rgba(13, 110, 253, 0.15)" : "none",
+                  transition: "all 0.3s ease" 
+                }}
+              >
+                <i className="bi bi-search text-muted me-2" style={{ fontSize: "14px", cursor: "pointer" }} onClick={() => handleSearchSubmit()}></i>
+                <input 
+                  type="text" 
+                  placeholder="Search products..." 
+                  className="border-0 bg-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  style={{ 
+                    fontSize: "13px", 
+                    outline: "none", 
+                    width: "100%",
+                    color: "#1e293b" 
+                  }} 
+                />
+              </div>
+            </form>
 
             {/* Cart Icon with Badge */}
             <Link 
@@ -143,12 +160,14 @@ function Navbar() {
               onMouseLeave={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
             >
               <i className="bi bi-bag text-dark" style={{ fontSize: "16px" }}></i>
-              <span 
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white"
-                style={{ fontSize: "10px", padding: "4px 6px" }}
-              >
-                3
-              </span>
+              {cartCount > 0 && (
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white"
+                  style={{ fontSize: "10px", padding: "4px 6px" }}
+                >
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             {/* User Profile Dropdown */}
@@ -182,7 +201,6 @@ function Navbar() {
                     minWidth: "180px",
                     borderRadius: "12px",
                     padding: "8px 0",
-                    animation: "fadeInUp 0.2s ease-out",
                     zIndex: 1050
                   }}
                 >
@@ -200,6 +218,15 @@ function Navbar() {
                       >
                         <i className="bi bi-person-badge text-muted"></i>
                         Profile
+                      </Link>
+                      <Link 
+                        className="dropdown-item d-flex align-items-center gap-2 py-2" 
+                        to="/orders"
+                        style={{ fontSize: "13px" }}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="bi bi-receipt text-muted"></i>
+                        My Orders
                       </Link>
                       <button 
                         className="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" 
@@ -240,6 +267,6 @@ function Navbar() {
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;

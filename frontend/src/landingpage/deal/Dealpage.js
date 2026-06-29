@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import Branddeal from './Branddeal';
 
 const Dealpage = () => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  
   // Flash sale countdown timer state (initially 5 hours)
   const [timeLeft, setTimeLeft] = useState(18000); // 5 hours in seconds
+  const [cartAddingId, setCartAddingId] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -12,7 +18,7 @@ const Dealpage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -25,9 +31,14 @@ const Dealpage = () => {
 
   const time = formatTime(timeLeft);
 
+  // Wires custom products to correct database IDs:
+  // - Buds Pro Gen 2 -> ID: 6
+  // - Mivi Soundbar 100W -> ID: 5
+  // - Nova 2 Neo 5G -> ID: 2
+  // - Zonda Luxury Perfume -> ID: 15
   const dealProducts = [
     {
-      id: 1,
+      id: 6,
       name: "Buds Pro Gen 2",
       desc: "Active Noise Cancellation, 40 Hours Playback",
       price: "₹999",
@@ -38,7 +49,7 @@ const Dealpage = () => {
       endsIn: "Today"
     },
     {
-      id: 2,
+      id: 5,
       name: "Mivi Soundbar 100W",
       desc: "Deep Bass Home Theater, 2.1 Channel Cinema Sound",
       price: "₹3,999",
@@ -49,7 +60,7 @@ const Dealpage = () => {
       endsIn: "Today"
     },
     {
-      id: 3,
+      id: 2,
       name: "Nova 2 Neo 5G",
       desc: "6000mAh Battery, 48MP Dual Sony Camera",
       price: "₹12,999",
@@ -60,7 +71,7 @@ const Dealpage = () => {
       endsIn: "2 Days"
     },
     {
-      id: 4,
+      id: 15,
       name: "Zonda Luxury Perfume",
       desc: "An exquisite French fragrance elixir blending cedarwood and amber.",
       price: "₹1,499",
@@ -71,6 +82,13 @@ const Dealpage = () => {
       endsIn: "Today"
     }
   ];
+
+  const handleAddToCart = async (e, id) => {
+    e.stopPropagation();
+    setCartAddingId(id);
+    await addToCart(id, 1);
+    setCartAddingId(null);
+  };
 
   return (
     <div className="bg-light min-vh-100 py-5">
@@ -155,6 +173,7 @@ const Dealpage = () => {
               <div key={prod.id} className="col-12 col-sm-6 col-lg-3 d-flex align-items-stretch">
                 <div 
                   className="card border-0 shadow-sm overflow-hidden w-100 d-flex flex-column justify-content-between position-relative"
+                  onClick={() => navigate(`/products/${prod.id}`)}
                   style={{
                     borderRadius: "16px",
                     backgroundColor: "#ffffff",
@@ -164,12 +183,10 @@ const Dealpage = () => {
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-6px)";
                     e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.06)";
-                    e.currentTarget.style.border = "1px solid #0d6efd";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.02)";
-                    e.currentTarget.style.border = "none";
                   }}
                 >
                   {/* Discount Badge */}
@@ -229,9 +246,34 @@ const Dealpage = () => {
                         <span className="text-muted text-decoration-line-through" style={{ fontSize: "12px" }}>{prod.originalPrice}</span>
                       </div>
 
-                      <div className="d-flex align-items-center justify-content-between bg-light rounded-3 px-3 py-1.5" style={{ fontSize: "11px" }}>
+                      <div className="d-flex align-items-center justify-content-between bg-light rounded-3 px-3 py-1.5 mb-3" style={{ fontSize: "11px" }}>
                         <span className="text-muted"><i className="bi bi-clock me-1"></i>Ends in:</span>
                         <span className="fw-semibold text-dark">{prod.endsIn}</span>
+                      </div>
+
+                      {/* Interactive Buttons */}
+                      <div className="d-flex gap-2">
+                        <button 
+                          onClick={(e) => handleAddToCart(e, prod.id)}
+                          disabled={cartAddingId === prod.id}
+                          className="btn btn-primary btn-sm flex-grow-1 py-2 fw-semibold"
+                          style={{ borderRadius: "8px" }}
+                        >
+                          {cartAddingId === prod.id ? (
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          ) : (
+                            <>
+                              <i className="bi bi-cart-plus me-1"></i> Add
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); navigate(`/products/${prod.id}`); }}
+                          className="btn btn-outline-dark btn-sm py-2 px-3 fw-semibold"
+                          style={{ borderRadius: "8px" }}
+                        >
+                          Details
+                        </button>
                       </div>
                     </div>
                   </div>
