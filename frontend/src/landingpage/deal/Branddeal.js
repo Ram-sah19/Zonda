@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Branddeal = () => {
+  const navigate = useNavigate();
+
   const brandDeals = [
     {
       brand: "Samsung",
@@ -34,6 +37,10 @@ const Branddeal = () => {
     }
   ];
 
+  const handleBrandClick = (name) => {
+    navigate(`/brand/${name.toLowerCase()}`);
+  };
+
   return (
     <div className="my-5">
       <div className="border-bottom pb-3 mb-5">
@@ -47,12 +54,14 @@ const Branddeal = () => {
           <div key={idx} className="col-12 col-lg-4">
             <div 
               className="card border-0 text-white overflow-hidden shadow-sm h-100"
+              onClick={() => handleBrandClick(deal.brand)}
               style={{
                 background: deal.bg,
                 borderRadius: "20px",
                 position: "relative",
                 minHeight: "360px",
-                transition: "all 0.3s ease"
+                transition: "all 0.3s ease",
+                cursor: "pointer"
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.02)";

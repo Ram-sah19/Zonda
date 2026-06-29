@@ -48,6 +48,7 @@ const registerUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        isSeller: user.isSeller,
         token: generateToken(user._id),
       });
     } else {
@@ -83,6 +84,7 @@ const loginUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        isSeller: user.isSeller,
         token: generateToken(user._id),
       });
     } else {
@@ -111,8 +113,36 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Become a seller
+// @route   PUT /api/auth/become-seller
+// @access  Private
+const becomeSeller = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.isSeller = true;
+    await user.save();
+    
+    res.json({
+      message: "You are now registered as a Seller!",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isSeller: user.isSeller
+      }
+    });
+  } catch (error) {
+    console.error("Become Seller Error:", error);
+    res.status(500).json({ message: "Server error becoming a seller", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
+  becomeSeller,
 };

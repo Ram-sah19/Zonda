@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 
 const categories = [
   { id: 'all', name: 'All Categories' },
@@ -14,7 +16,8 @@ const categories = [
   { id: 'monitors', name: 'Monitors' }
 ];
 
-const products = [
+// Seed list fallback in case DB is offline
+export const products = [
   {
     id: 1,
     category: 'smartphones',
@@ -172,15 +175,82 @@ const products = [
 ];
 
 const Productpage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState(250000); // max price filter
+  const [priceRange, setPriceRange] = useState(250000);
   const [sortBy, setSortBy] = useState('featured');
+  const [dbProducts, setDbProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
 
-  // Filtering and sorting logic
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:5000/api/products");
+        if (response.ok) {
+          const data = await response.json();
+          setDbProducts(data);
+        } else {
+          setDbProducts(products);
+        }
+      } catch (err) {
+        console.error("Failed to load products from API:", err);
+        setDbProducts(products);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const searchVal = searchParams.get("search") || "";
+    setSearchTerm(searchVal);
+  }, [searchParams]);
+
+  const [addingId, setAddingId] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
+  const handleAddToCart = async (product) => {
+    setAddingId(product.id);
+    const result = await addToCart(product.id, 1);
+    setAddingId(null);
+    
+    if (result.success) {
+      setNotification({
+        show: true,
+        message: `${product.name} added to cart!`,
+        type: 'success'
+      });
+      setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+    } else {
+      if (result.error === "Not authenticated" || result.error === "Please log in to add items to your cart.") {
+        setNotification({
+          show: true,
+          message: "Please log in to add items to your cart. Redirecting...",
+          type: 'warning'
+        });
+        setTimeout(() => {
+          setNotification({ show: false, message: '', type: '' });
+          navigate("/login");
+        }, 2000);
+      } else {
+        setNotification({
+          show: true,
+          message: result.error || "Failed to add to cart.",
+          type: 'danger'
+        });
+        setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+      }
+    }
+  };
+
   const filteredProducts = useMemo(() => {
-    return products
+    return dbProducts
       .filter((prod) => {
         const matchesSearch = prod.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               prod.desc.toLowerCase().includes(searchTerm.toLowerCase());
@@ -192,13 +262,35 @@ const Productpage = () => {
         if (sortBy === 'price-low') return a.price - b.price;
         if (sortBy === 'price-high') return b.price - a.price;
         if (sortBy === 'rating') return b.rating - a.rating;
-        return 0; // featured/default
+        return 0;
       });
-  }, [searchTerm, selectedCategory, priceRange, sortBy]);
+  }, [dbProducts, searchTerm, selectedCategory, priceRange, sortBy]);
 
   return (
     <div className="bg-light min-vh-100 py-5">
       <div className="container">
+        {notification.show && (
+          <div 
+            className={`alert alert-${notification.type} alert-dismissible fade show shadow-sm border-0 d-flex align-items-center gap-2`} 
+            role="alert"
+            style={{
+              position: "fixed",
+              top: "90px",
+              right: "24px",
+              zIndex: 1050,
+              minWidth: "300px",
+              borderRadius: "12px"
+            }}
+          >
+            <i className={`bi ${notification.type === 'success' ? 'bi-check-circle-fill' : notification.type === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-x-circle-fill'}`}></i>
+            <div>{notification.message}</div>
+            <button 
+              type="button" 
+              className="btn-close shadow-none" 
+              onClick={() => setNotification({ show: false, message: '', type: '' })}
+            ></button>
+          </div>
+        )}
         
         {/* Title Header */}
         <div className="border-bottom pb-3 mb-5">
@@ -234,7 +326,7 @@ const Productpage = () => {
               <div className="mb-4 border-top pt-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="fw-bold mb-0" style={{ fontSize: "16px", color: "#1e293b" }}>Max Price</h5>
-                  <span className="badge bg-light text-primary fw-bold border" style={{ fontSize: "12px" }}>₹{priceRange.toLocaleString()}</span>
+                  <span className="badge bg-light text-primary fw-bold border" style={{ fontSize: "12px" }}>₹{priceRange.toLocaleString("en-IN")}</span>
                 </div>
                 <input 
                   type="range" 
@@ -260,6 +352,7 @@ const Productpage = () => {
                   setSelectedCategory('all');
                   setPriceRange(250000);
                   setSortBy('featured');
+                  setSearchParams({});
                 }}
               >
                 Reset Filters
@@ -309,7 +402,13 @@ const Productpage = () => {
             </div>
 
             {/* Product Cards Grid */}
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading products...</span>
+                </div>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="row g-4">
                 {filteredProducts.map((prod) => (
                   <div key={prod.id} className="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
@@ -352,6 +451,7 @@ const Productpage = () => {
 
                       {/* Image Frame */}
                       <div 
+                        onClick={() => navigate(`/products/${prod.id}`)}
                         className="p-4 d-flex justify-content-center align-items-center"
                         style={{
                           backgroundColor: "#f8fafc",
@@ -360,7 +460,7 @@ const Productpage = () => {
                         }}
                       >
                         <img 
-                          src={prod.src} 
+                          src={prod.src.startsWith("http") || prod.src.startsWith("data:") ? prod.src : `/${prod.src}`} 
                           alt={prod.name} 
                           style={{
                             maxWidth: "80%",
@@ -388,16 +488,36 @@ const Productpage = () => {
 
                         <div>
                           <div className="d-flex align-items-baseline gap-2 mb-3">
-                            <span className="fs-5 fw-bold text-dark">₹{prod.price.toLocaleString()}</span>
-                            <span className="text-muted text-decoration-line-through" style={{ fontSize: "12px" }}>{prod.originalPrice}</span>
+                            <span className="fs-5 fw-bold text-dark">₹{prod.price.toLocaleString("en-IN")}</span>
+                            {prod.originalPrice && (
+                              <span className="text-muted text-decoration-line-through" style={{ fontSize: "12px" }}>{prod.originalPrice}</span>
+                            )}
                           </div>
 
-                          <button 
-                            className="btn btn-outline-primary btn-sm w-100 py-2 fw-semibold"
-                            style={{ borderRadius: "8px", fontSize: "13px" }}
-                          >
-                            Add to Cart
-                          </button>
+                          <div className="d-flex gap-2">
+                            <button 
+                              onClick={() => navigate(`/products/${prod.id}`)}
+                              className="btn btn-outline-secondary btn-sm w-50 py-2 fw-semibold"
+                              style={{ borderRadius: "8px", fontSize: "13px" }}
+                            >
+                              Details
+                            </button>
+                            <button 
+                              onClick={() => handleAddToCart(prod)}
+                              disabled={addingId === prod.id}
+                              className="btn btn-primary btn-sm w-50 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1.5"
+                              style={{ borderRadius: "8px", fontSize: "13px" }}
+                            >
+                              {addingId === prod.id ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                  Adding...
+                                </>
+                              ) : (
+                                <>Add to Cart</>
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

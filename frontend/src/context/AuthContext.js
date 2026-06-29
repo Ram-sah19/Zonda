@@ -1,8 +1,14 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 
-const AuthContext = createContext();
+const AuthContext = createContext(undefined);
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,7 +17,6 @@ export const AuthProvider = ({ children }) => {
 
   const API_URL = "http://localhost:5000/api/auth";
 
-  // Check if token exists on load, then fetch user profile
   useEffect(() => {
     const fetchUser = async () => {
       if (token) {
@@ -28,7 +33,6 @@ export const AuthProvider = ({ children }) => {
             const userData = await response.json();
             setUser(userData);
           } else {
-            // Token expired or invalid
             logout();
           }
         } catch (error) {
@@ -42,7 +46,6 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [token]);
 
-  // Login handler
   const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/login`, {
@@ -65,6 +68,7 @@ export const AuthProvider = ({ children }) => {
         _id: data._id,
         name: data.name,
         email: data.email,
+        isSeller: data.isSeller,
       });
 
       return { success: true };
@@ -73,7 +77,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign up handler
   const signup = async (name, email, password) => {
     try {
       const response = await fetch(`${API_URL}/signup`, {
@@ -96,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         _id: data._id,
         name: data.name,
         email: data.email,
+        isSeller: data.isSeller,
       });
 
       return { success: true };
@@ -104,7 +108,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout handler
+  const becomeSeller = async () => {
+    try {
+      const response = await fetch(`${API_URL}/become-seller`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to become a seller");
+      }
+
+      setUser(data.user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
@@ -118,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    becomeSeller,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

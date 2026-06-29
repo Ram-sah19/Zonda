@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Features({ activeCategory }) {
+    const navigate = useNavigate();
 
     const categories = [
         { id: 'all', name: 'All Products', icon: '⚡' },
@@ -294,6 +296,7 @@ function Features({ activeCategory }) {
                                     </div>
 
                                     <button 
+                                        onClick={() => navigate(`/products/${prod.id}`)}
                                         className="btn btn-outline-primary btn-sm w-100 py-2"
                                         style={{
                                             borderRadius: "6px",
