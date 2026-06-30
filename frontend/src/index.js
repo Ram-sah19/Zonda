@@ -16,7 +16,13 @@ import Profilepage from "./landingpage/singup/Profilepage";
 import Cartpage from "./landingpage/singup/Cartpage";
 import Orderpage from "./landingpage/order/Orderpage";
 import Sellerpage from "./landingpage/seller/Sellerpage";
+import SellerRegister from "./landingpage/seller/SellerRegister";
 import BrandStore from "./landingpage/product/BrandStore";
+import AdminRegister from "./landingpage/admin/AdminRegister";
+import AdminDashboard from "./landingpage/admin/AdminDashboard";
+import DeliveryRegister from "./landingpage/delivery/DeliveryRegister";
+import DeliveryDashboard from "./landingpage/delivery/DeliveryDashboard";
+import CustomerTrackDelivery from "./landingpage/delivery/CustomerTrackDelivery";
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -40,7 +46,15 @@ root.render(
           <Route path="/cart" element={<Cartpage />} />
           <Route path="/orders" element={<Orderpage />} />
           <Route path="/seller" element={<Sellerpage />} />
+          <Route path="/seller/register" element={<SellerRegister />} />
           <Route path="/brand/:brandName" element={<BrandStore />} />
+          <Route path="/admin/signup" element={<AdminRegister />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/delivery/register" element={<DeliveryRegister />} />
+          <Route path="/signup-delivery" element={<DeliveryRegister />} />
+          <Route path="/delivery/signup" element={<DeliveryRegister />} />
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+          <Route path="/orders/track/:orderId" element={<CustomerTrackDelivery />} />
         </Routes>
         <Footer />
       </CartProvider>

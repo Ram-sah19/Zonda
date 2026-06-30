@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { products } from "../product/Productpage";
 
 function Cartpage() {
-  const { cart, loading, error, updateCartQuantity, removeFromCart, fetchCart } = useCart();
+  const { cart, updateCartQuantity, removeFromCart, fetchCart } = useCart();
   const { user, token } = useAuth();
-  const navigate = useNavigate();
 
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);

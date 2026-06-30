@@ -56,17 +56,24 @@ zonda/
 │   │   ├── db.js              # Database connection & seed synchronization
 │   │   └── seedProducts.js    # Default seed product registry data
 │   ├── controller/
-│   │   ├── authController.js  # Registration, login & profile API actions
-│   │   └── cartController.js  # Add, get, update, remove, and clear cart actions
+│   │   ├── adminController.js # Admin accounts, suspensions, logistics assignments
+│   │   ├── authController.js  # Registration, login & profile API actions (buyers, sellers, admins, drivers)
+│   │   ├── cartController.js  # Add, get, update, remove, and clear cart actions
+│   │   └── deliveryController.js # Fetching jobs, status triggers, coordinates updates, and earnings
 │   ├── middleware/
-│   │   └── authMiddleware.js  # JWT validation & user attachment middleware
+│   │   ├── adminMiddleware.js # Admin token claims and RBAC levels enforcement
+│   │   ├── authMiddleware.js  # JWT validation & user attachment middleware
+│   │   └── deliveryMiddleware.js # Driver profile approval verification check
 │   ├── model/
 │   │   ├── Cart.js            # User shopping cart Mongoose schema
+│   │   ├── Order.js           # Orders, logistics milestones, ratings, coordinates schema
 │   │   ├── Product.js         # Product Mongoose schema
-│   │   └── userSchema.js      # User registration & hashed password Mongoose schema
+│   │   └── userSchema.js      # Hashed profiles, seller details, driver credentials schema
 │   ├── routes/
-│   │   ├── authRoutes.js      # Auth API mappings (/signup, /login, /me, /become-seller)
+│   │   ├── adminRoutes.js     # Admin API endpoints
+│   │   ├── authRoutes.js      # Auth API mappings (/signup, /login, /me, /signup-delivery)
 │   │   ├── cartRoutes.js      # Cart API mappings (/add, /update, /remove/:id)
+│   │   ├── deliveryRoutes.js  # Delivery logistics partner API mappings
 │   │   └── productRoutes.js   # Product API mappings
 │   ├── .env                   # Server environment variables (DB URI, JWT secret)
 │   ├── server.js              # Express app config & master clustering entry point
@@ -84,9 +91,16 @@ zonda/
     │   │   ├── about/
     │   │   │   ├── Aboutpage.js   # About page (company story and values)
     │   │   │   └── Team.js        # Team showcase component
+    │   │   ├── admin/
+    │   │   │   ├── AdminDashboard.js # Admin control panel (users list, orders dispatch, fleet onboarding)
+    │   │   │   └── AdminRegister.js  # Admin sign-up page
     │   │   ├── deal/
     │   │   │   ├── Branddeal.js   # Brand partnership spotlight cards
     │   │   │   └── Dealpage.js    # Flash deals with active countdown timer
+    │   │   ├── delivery/
+    │   │   │   ├── CustomerTrackDelivery.js # Live tracking map simulation and ratings page
+    │   │   │   ├── DeliveryDashboard.js # Driver runs, active jobs, milestone triggers, and payouts
+    │   │   │   └── DeliveryRegister.js  # Multi-step driver documentation wizard
     │   │   ├── home/
     │   │   │   ├── Brand.js       # Partner brand spotlights
     │   │   │   ├── Feature.js     # Featured products catalog
@@ -103,7 +117,7 @@ zonda/
     │   │   │   └── Product.js
     │   │   ├── singup/
     │   │   │   ├── Cartpage.js    # Cart dashboard, totals, and checkout flow
-    │   │   │   ├── Login.js       # User login screen with eye toggle
+    │   │   │   ├── Login.js       # User login screen with eye toggle and role redirect
     │   │   │   ├── Profilepage.js # User profile dashboard
     │   │   │   └── Singup.js      # Registration page with eye toggles
     │   │   ├── support/
@@ -143,6 +157,18 @@ zonda/
 * **Global Context Management**: Syncs addition, updates, removals, and checkout simulation with MongoDB.
 * **Real-time Countdown**: `Dealpage.js` simulates active lightning deals with hours/minutes/seconds countdown hooks.
 
+### 6. Secure Admin Control Panel (`AdminDashboard.js` & `AdminRegister.js`)
+* **Role-Based Access Control (RBAC)**: Supports roles (Super Admin, Manager, Moderator, Support) to enforce permission boundaries.
+* **Member Verification & Suspension**: Direct actions for admins to suspend or restore accounts for both buyers and sellers.
+* **Product Catalog Moderation**: Review all published items in the system, with capabilities to delete flagrant or incorrect product listings.
+* **System Log Audits**: Displays real-time audit logs of administrative actions (e.g. status changes, driver approvals).
+
+### 7. Delivery Logistics Integration (`DeliveryRegister.js`, `DeliveryDashboard.js` & `CustomerTrackDelivery.js`)
+* **Driver Onboarding**: Multi-step partner signup form capturing vehicle type, registration plate numbers, driving license records, and identity proof credentials.
+* **Logistics Dispatch Board**: Admin panel supporting proximity-based auto-allocation of orders to the nearest available driver, or manual partner assignment override.
+* **Driver Workspace**: Personal dashboard for approved delivery couriers tracking wallet commissions (daily, weekly, monthly payout balances), rating feedback reviews, and active dispatch jobs.
+* **Live Milestones & GPS Simulation**: Tracks shipment states (*Assigned, Accepted, Picked Up, Out for Delivery, Delivered, Failed, Returned*) with simulated SVG real-time movement maps for customer reassurance.
+
 ---
 
 ## 🛠️ Technology Stack & Refactoring
@@ -163,6 +189,9 @@ The frontend client codebase was recently migrated from TypeScript to **Standard
 ### Auth API (`/api/auth`)
 * `POST /signup` - Registers a new user, hashes password, saves to DB, and returns a JWT token.
 * `POST /login` - Matches credentials and returns a JWT token.
+* `POST /signup-admin` - Registers a new administrative user with Support/Super Admin designation.
+* `POST /signup-seller` - Onboards a seller, collecting business contact, tax IDs, and verification records.
+* `POST /signup-delivery` - Registers a new delivery partner, requiring document validation.
 * `GET /me` - Returns logged-in user profile parameters (requires authentication).
 * `PUT /become-seller` - Upgrades logged-in user profile to a seller profile (requires authentication).
 
@@ -180,6 +209,21 @@ The frontend client codebase was recently migrated from TypeScript to **Standard
 * `POST /` - Publishes a new product listing (requires seller privileges).
 * `PUT /:id` - Updates a product listing (requires seller privileges).
 * `DELETE /:id` - Deletes a product listing (requires seller privileges).
+
+### Admin API (`/api/admin`)
+* `GET /users` - Fetches a list of all registered users (requires admin privileges).
+* `PUT /users/:userId/suspend` - Toggles the suspension state on buyer or seller accounts (requires admin privileges).
+* `DELETE /products/:productId` - Overrides and deletes a listing from the catalog (requires admin privileges).
+* `GET /delivery-partners` - Fetches registered delivery couriers and applications (requires admin privileges).
+* `PUT /delivery-partners/:partnerId/verify` - Approves, rejects, or suspends delivery partner onboarding (requires admin privileges).
+* `POST /orders/:orderId/assign` - Allocates a delivery run manually or via proximity algorithm (requires admin privileges).
+* `GET /logs` - Retrieves system audit activities of admin actions (requires admin privileges).
+
+### Logistics & Delivery API (`/api/delivery`)
+* `GET /requests` - Lists pending or assigned shipments for authorized delivery partners.
+* `POST /orders/:orderId/accept` - Claims an assigned order run (requires approved delivery partner role).
+* `PUT /orders/:orderId/status` - Updates milestone state (Picked Up, Out for Delivery, Delivered, Failed) and logs location coordinates.
+* `GET /earnings` - Extracts commissions ledger balances and shipment run history.
 
 ---
 

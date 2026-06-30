@@ -81,8 +81,55 @@ const getOrderById = async (req, res) => {
   }
 };
 
+const submitDeliveryRating = async (req, res) => {
+  try {
+    const { rating, feedback } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to rate this delivery" });
+    }
+
+    order.deliveryRating = rating;
+    order.deliveryFeedback = feedback || "";
+    await order.save();
+
+    // Recalculate average ratings for the delivery partner
+    if (order.deliveryPartnerId) {
+      const User = require("../model/userSchema");
+      const partner = await User.findById(order.deliveryPartnerId);
+      if (partner) {
+        const ratedOrders = await Order.find({ 
+          deliveryPartnerId: order.deliveryPartnerId, 
+          deliveryRating: { $gt: 0 } 
+        });
+        const totalRatingSum = ratedOrders.reduce((sum, curr) => sum + curr.deliveryRating, 0);
+        
+        partner.deliveryPartnerDetails = {
+          ...partner.deliveryPartnerDetails,
+          rating: {
+            average: ratedOrders.length > 0 ? (totalRatingSum / ratedOrders.length) : 0,
+            count: ratedOrders.length
+          }
+        };
+        await partner.save();
+      }
+    }
+
+    res.status(200).json({ success: true, message: "Rating recorded successfully", order });
+  } catch (error) {
+    console.error("Submit Delivery Rating Error:", error);
+    res.status(500).json({ message: "Server error logging delivery rating", error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
   getOrderById,
+  submitDeliveryRating,
 };

@@ -221,26 +221,26 @@ function Footer() {
           
           {/* Copyrights & Legal Links */}
           <div className="col-12 col-md-8 text-center text-md-start">
-            <span className="text-muted">
+            <span className="">
               © {new Date().getFullYear()} Zonda Store. All rights reserved.
             </span>
             <div className="d-inline-flex gap-2.5 ms-md-3 mt-2 mt-md-0 d-block d-md-inline-block">
-              <span className="text-muted d-none d-md-inline">|</span>
-              <Link to="/contact" className="text-decoration-none text-muted" style={{ color: "#64748b" }}
+              <span className=" d-none d-md-inline"></span>
+              <Link to="/contact" className="text-decoration-none " style={{ color: "#64748b" }}
                 onMouseEnter={(e) => e.currentTarget.style.color = "#94a3b8"}
                 onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
               >
                 Privacy Policy
               </Link>
-              <span className="text-muted">•</span>
-              <Link to="/contact" className="text-decoration-none text-muted" style={{ color: "#64748b" }}
+              <span className="">•</span>
+              <Link to="/contact" className="text-decoration-none " style={{ color: "#64748b" }}
                 onMouseEnter={(e) => e.currentTarget.style.color = "#94a3b8"}
                 onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
               >
                 Terms of Service
               </Link>
-              <span className="text-muted">•</span>
-              <Link to="/contact" className="text-decoration-none text-muted" style={{ color: "#64748b" }}
+              <span className="">•</span>
+              <Link to="/contact" className="text-decoration-none " style={{ color: "#64748b" }}
                 onMouseEnter={(e) => e.currentTarget.style.color = "#94a3b8"}
                 onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
               >
@@ -251,7 +251,7 @@ function Footer() {
 
           {/* Payment Methods */}
           <div className="col-12 col-md-4 text-center text-md-end">
-            <div className="d-inline-flex align-items-center gap-2 text-muted" style={{ fontSize: "18px" }}>
+            <div className="d-inline-flex align-items-center gap-2 " style={{ fontSize: "18px" }}>
               <i className="bi bi-credit-card-2-front" title="Credit Cards" style={{ color: "#94a3b8" }}></i>
               <span style={{ fontSize: "11px", fontWeight: "600", letterSpacing: "0.5px" }}>VISA / MC / AMEX / PAYPAL</span>
             </div>

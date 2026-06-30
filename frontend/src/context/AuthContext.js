@@ -64,14 +64,20 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("token", data.token);
       setToken(data.token);
-      setUser({
+      const userObj = {
         _id: data._id,
         name: data.name,
         email: data.email,
         isSeller: data.isSeller,
-      });
+        isAdmin: data.isAdmin,
+        adminRole: data.adminRole,
+        sellerStatus: data.sellerStatus,
+        isDeliveryPartner: data.isDeliveryPartner,
+        deliveryPartnerStatus: data.deliveryPartnerStatus,
+      };
+      setUser(userObj);
 
-      return { success: true };
+      return { success: true, user: userObj };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -95,11 +101,111 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem("token", data.token);
       setToken(data.token);
+      const userObj = {
+        _id: data._id,
+        name: data.name,
+        email: data.email,
+        isSeller: data.isSeller,
+        isAdmin: data.isAdmin,
+        adminRole: data.adminRole,
+      };
+      setUser(userObj);
+
+      return { success: true, user: userObj };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signupAdmin = async (name, email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/signup-admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Admin registration failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+      const userObj = {
+        _id: data._id,
+        name: data.name,
+        email: data.email,
+        isAdmin: data.isAdmin,
+        adminRole: data.adminRole,
+      };
+      setUser(userObj);
+
+      return { success: true, user: userObj };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signupSeller = async (sellerData) => {
+    try {
+      const response = await fetch(`${API_URL}/signup-seller`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sellerData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Seller registration failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
       setUser({
         _id: data._id,
         name: data.name,
         email: data.email,
         isSeller: data.isSeller,
+        sellerDetails: data.sellerDetails,
+      });
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signupDeliveryPartner = async (partnerData) => {
+    try {
+      const response = await fetch(`${API_URL}/signup-delivery`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(partnerData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Delivery Partner registration failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+      setUser({
+        _id: data._id,
+        name: data.name,
+        email: data.email,
+        isDeliveryPartner: data.isDeliveryPartner,
+        deliveryPartnerStatus: data.deliveryPartnerStatus,
       });
 
       return { success: true };
@@ -144,6 +250,9 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     becomeSeller,
+    signupSeller,
+    signupAdmin,
+    signupDeliveryPartner,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 
 const Sellerpage = () => {
-  const { user, token, becomeSeller } = useAuth();
+  const { user, token } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +25,7 @@ const Sellerpage = () => {
   const API_URL = "http://localhost:5000/api/products";
 
   // Fetch only this seller's products
-  const fetchSellerProducts = async () => {
+  const fetchSellerProducts = useCallback(async () => {
     if (!token || !user?.isSeller) return;
     setLoading(true);
     setError(null);
@@ -45,11 +45,11 @@ const Sellerpage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, user?.isSeller]);
 
   useEffect(() => {
     fetchSellerProducts();
-  }, [token, user]);
+  }, [fetchSellerProducts]);
 
   // Handle file uploads (converts to base64)
   const handleImageFileChange = (e) => {
@@ -60,22 +60,6 @@ const Sellerpage = () => {
         setImageFileBase64(reader.result);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  // Onboard user as a seller
-  const handleBecomeSeller = async () => {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await becomeSeller();
-      if (!res.success) {
-        throw new Error(res.error || "Failed to become a seller");
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -192,82 +176,184 @@ const Sellerpage = () => {
     setImageFileBase64(null);
   };
 
-  // 1. Not Logged In View
-  if (!user) {
+  // 1. Unified "Become a Seller" Landing Page for Guests and Buyers (non-sellers)
+  if (!user || !user.isSeller) {
     return (
-      <div className="container py-5 my-5 text-center">
-        <div className="card shadow-sm border-0 p-5 mx-auto" style={{ maxWidth: "500px", borderRadius: "16px" }}>
-          <i className="bi bi-shield-lock-fill text-primary mb-4" style={{ fontSize: "64px" }}></i>
-          <h2 className="fw-bold mb-3">Access Denied</h2>
-          <p className="text-muted mb-4">Please log in to your account to access the Become a Seller dashboard.</p>
-          <a href="/login" className="btn btn-primary px-4 py-2 fw-semibold" style={{ borderRadius: "8px" }}>Log In Now</a>
-        </div>
-      </div>
-    );
-  }
+      <div 
+        className="min-vh-100 py-5"
+        style={{
+          background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+        }}
+      >
+        <div className="container py-4">
+          
+          {/* Active Buyer Warning / Info Alert */}
+          {user && !user.isSeller && (
+            <div className="alert alert-info border-0 rounded-4 p-3 mb-5 d-flex align-items-center gap-3 shadow-sm mx-auto" style={{ maxWidth: "900px" }}>
+              <i className="bi bi-info-circle-fill fs-4 text-primary"></i>
+              <div>
+                <h6 className="fw-bold mb-1">Logged in as a Buyer</h6>
+                <p className="mb-0 text-muted small">
+                  Buyer accounts cannot be converted to seller accounts. To start selling, please create a separate seller account. Submitting the registration form will automatically log you out of your current buyer session.
+                </p>
+              </div>
+            </div>
+          )}
 
-  // 2. Become a Seller Onboarding View
-  if (!user.isSeller) {
-    return (
-      <div className="container py-5 my-4">
-        <div className="row align-items-center justify-content-center">
-          <div className="col-12 col-lg-8">
-            <div className="card shadow border-0 p-4 p-md-5 text-center position-relative overflow-hidden" style={{ borderRadius: "24px" }}>
-              <div className="position-absolute" style={{ top: "-10%", right: "-10%", width: "300px", height: "300px", background: "radial-gradient(circle, rgba(13,110,253,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
-              
-              <span className="badge bg-primary-subtle text-primary px-3 py-2 fw-bold text-uppercase mb-3 align-self-center" style={{ fontSize: "11px", letterSpacing: "1.5px" }}>Join the marketplace</span>
-              <h1 className="display-5 fw-extrabold mb-3" style={{ fontWeight: "800", color: "#0f172a" }}>Become a Seller on Zonda</h1>
-              <p className="lead text-muted mb-5 mx-auto" style={{ maxWidth: "600px" }}>
-                Reach millions of buyers, manage your stock in real-time, upload high-quality product images, and scale your business effortlessly with our sleek dashboard.
+          {/* Hero Section */}
+          <div className="row justify-content-center text-center mb-5">
+            <div className="col-12 col-lg-8 position-relative">
+              <span className="badge bg-primary-subtle text-primary px-3 py-2 fw-bold text-uppercase mb-3" style={{ fontSize: "11px", letterSpacing: "1.5px" }}>
+                Merchant Marketplace
+              </span>
+              <h1 className="display-4 fw-extrabold mb-3 text-dark" style={{ fontWeight: "800" }}>
+                Launch Your Business on Zonda
+              </h1>
+              <p className="lead text-muted mb-4 mx-auto" style={{ maxWidth: "680px" }}>
+                Reach millions of tech enthusiasts and electronics buyers. Manage your inventory in real-time, scale your brand, and keep 100% of your earnings.
               </p>
+              <a 
+                href="/seller/register" 
+                className="btn btn-primary btn-lg px-5 py-3 fw-bold shadow-sm"
+                style={{ borderRadius: "12px", fontSize: "16px" }}
+              >
+                Register as a Seller
+              </a>
+            </div>
+          </div>
 
-              <div className="row g-4 mb-5 text-start">
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-start gap-3">
-                    <div className="p-2 rounded bg-primary-subtle text-primary"><i className="bi bi-lightning-charge-fill"></i></div>
-                    <div>
-                      <h6 className="fw-bold mb-1">Instant Setup</h6>
-                      <small className="text-muted">Start listing products in under 5 minutes.</small>
-                    </div>
-                  </div>
+          {/* Features / Benefits Grid */}
+          <div className="row g-4 mb-5 justify-content-center">
+            <div className="col-12 text-center mb-2">
+              <h3 className="fw-bold text-dark">Why Sell on Zonda?</h3>
+              <p className="text-muted">Take advantage of our state-of-the-art e-commerce tools</p>
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-4">
+              <div className="card border-0 shadow-sm p-4 h-100 rounded-4 transition-all hover-translate-up" style={{ backgroundColor: "#ffffff" }}>
+                <div className="p-3 bg-primary-subtle text-primary rounded-3 d-inline-block mb-3" style={{ width: "fit-content" }}>
+                  <i className="bi bi-graph-up-arrow fs-4"></i>
                 </div>
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-start gap-3">
-                    <div className="p-2 rounded bg-success-subtle text-success"><i className="bi bi-wallet2"></i></div>
-                    <div>
-                      <h6 className="fw-bold mb-1">Zero Commission</h6>
-                      <small className="text-muted">Keep 100% of your listed product earnings.</small>
-                    </div>
-                  </div>
+                <h5 className="fw-bold mb-2">Real-Time Analytics</h5>
+                <p className="text-muted small mb-0">Track product page views, stock levels, and monitor sales trends instantly via your personalized control panel.</p>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6 col-lg-4">
+              <div className="card border-0 shadow-sm p-4 h-100 rounded-4 transition-all hover-translate-up" style={{ backgroundColor: "#ffffff" }}>
+                <div className="p-3 bg-success-subtle text-success rounded-3 d-inline-block mb-3" style={{ width: "fit-content" }}>
+                  <i className="bi bi-currency-dollar fs-4"></i>
                 </div>
-                <div className="col-12 col-md-4">
-                  <div className="d-flex align-items-start gap-3">
-                    <div className="p-2 rounded bg-warning-subtle text-warning"><i className="bi bi-graph-up-arrow"></i></div>
-                    <div>
-                      <h6 className="fw-bold mb-1">Real-Time Insights</h6>
-                      <small className="text-muted">Track views, inventory levels and sales stats.</small>
-                    </div>
+                <h5 className="fw-bold mb-2">Zero Commission Fees</h5>
+                <p className="text-muted small mb-0">Zonda believes in supporting creators. Keep 100% of the listed price on every single transaction with zero hidden cuts.</p>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6 col-lg-4">
+              <div className="card border-0 shadow-sm p-4 h-100 rounded-4 transition-all hover-translate-up" style={{ backgroundColor: "#ffffff" }}>
+                <div className="p-3 bg-warning-subtle text-warning rounded-3 d-inline-block mb-3" style={{ width: "fit-content" }}>
+                  <i className="bi bi-people-fill fs-4"></i>
+                </div>
+                <h5 className="fw-bold mb-2">Access Active Customers</h5>
+                <p className="text-muted small mb-0">Instant placement on our frontend collections, putting your products in front of thousands of high-intent electronics shoppers.</p>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6 col-lg-4">
+              <div className="card border-0 shadow-sm p-4 h-100 rounded-4 transition-all hover-translate-up" style={{ backgroundColor: "#ffffff" }}>
+                <div className="p-3 bg-info-subtle text-info rounded-3 d-inline-block mb-3" style={{ width: "fit-content" }}>
+                  <i className="bi bi-wallet2 fs-4"></i>
+                </div>
+                <h5 className="fw-bold mb-2">Secure Automated Payouts</h5>
+                <p className="text-muted small mb-0">Rest easy with encrypted escrow payment flows, receiving payouts directly into your merchant bank account within 2-3 business days.</p>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6 col-lg-4">
+              <div className="card border-0 shadow-sm p-4 h-100 rounded-4 transition-all hover-translate-up" style={{ backgroundColor: "#ffffff" }}>
+                <div className="p-3 bg-danger-subtle text-danger rounded-3 d-inline-block mb-3" style={{ width: "fit-content" }}>
+                  <i className="bi bi-sliders fs-4"></i>
+                </div>
+                <h5 className="fw-bold mb-2">Robust Listing Controls</h5>
+                <p className="text-muted small mb-0">Easily create new listings, edit descriptions, adjust stock, upload base64 images, and delete items from the dashboard.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements & Documentation Checklist */}
+          <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5 mx-auto" style={{ maxWidth: "900px", backgroundColor: "#ffffff" }}>
+            <div className="row align-items-center">
+              <div className="col-12 col-md-6 mb-4 mb-md-0">
+                <span className="text-primary fw-bold text-uppercase small" style={{ letterSpacing: "1px" }}>Onboarding Checklist</span>
+                <h3 className="fw-bold text-dark mt-1 mb-3">What do I need to register?</h3>
+                <p className="text-muted small">We require verification of standard merchant credentials to protect our marketplace community and verify payouts.</p>
+                <div className="d-flex flex-column gap-2.5 mt-4">
+                  <div className="d-flex align-items-center gap-2 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <span>Contact details & personal login credentials</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <span>Registered Business Name & Address</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <span>Tax / GST identification details</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <span>Merchant bank account information</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success"></i>
+                    <span>Identity document (Passport, PAN, GST License, etc.)</span>
                   </div>
                 </div>
               </div>
-
-              {error && <div className="alert alert-danger" role="alert">{error}</div>}
-
-              <button 
-                onClick={handleBecomeSeller}
-                disabled={submitting}
-                className="btn btn-primary btn-lg px-5 py-3 fw-bold align-self-center shadow-sm"
-                style={{ borderRadius: "12px" }}
-              >
-                {submitting ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Activating Seller Profile...
-                  </>
-                ) : "Create Seller Account"}
-              </button>
+              <div className="col-12 col-md-6 text-center">
+                <div className="p-4 rounded-4 bg-light d-flex flex-column align-items-center justify-content-center border" style={{ minHeight: "220px" }}>
+                  <i className="bi bi-file-earmark-check text-primary mb-3" style={{ fontSize: "52px" }}></i>
+                  <h5 className="fw-bold mb-2">Ready to Start?</h5>
+                  <p className="text-muted small mb-4">Registration takes less than 5 minutes. Set up your listings immediately after signup.</p>
+                  <a href="/seller/register" className="btn btn-primary px-4 py-2.5 fw-semibold" style={{ borderRadius: "8px" }}>
+                    Create Seller Account
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Frequently Asked Questions */}
+          <div className="mx-auto mb-4" style={{ maxWidth: "900px" }}>
+            <h3 className="fw-bold text-dark text-center mb-4">Frequently Asked Questions</h3>
+            <div className="row g-3">
+              <div className="col-12 col-md-6">
+                <div className="p-4 bg-white rounded-4 border shadow-none h-100">
+                  <h6 className="fw-bold text-dark mb-2">Do I need a separate email address to sell?</h6>
+                  <p className="text-muted small mb-0">Yes. To safeguard buyer-seller accounts and guarantee order integrity, a separate registration with a different email is required.</p>
+                </div>
+              </div>
+              <div className="col-12 col-md-6">
+                <div className="p-4 bg-white rounded-4 border shadow-none h-100">
+                  <h6 className="fw-bold text-dark mb-2">Can I convert my existing buyer account?</h6>
+                  <p className="text-muted small mb-0">No. Buyer accounts cannot be converted. You must sign up for a dedicated seller account using our registration page.</p>
+                </div>
+              </div>
+              <div className="col-12 col-md-6">
+                <div className="p-4 bg-white rounded-4 border shadow-none h-100">
+                  <h6 className="fw-bold text-dark mb-2">Are there any upfront listing fees?</h6>
+                  <p className="text-muted small mb-0">No, Zonda offers a completely free portal for verified sellers. You pay nothing to list products or display your store catalog.</p>
+                </div>
+              </div>
+              <div className="col-12 col-md-6">
+                <div className="p-4 bg-white rounded-4 border shadow-none h-100">
+                  <h6 className="fw-bold text-dark mb-2">How do payouts work?</h6>
+                  <p className="text-muted small mb-0">Once an order is shipped and marked complete, funds are automatically transferred to the bank account listed in your seller details.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     );
