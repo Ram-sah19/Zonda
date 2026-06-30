@@ -2,60 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
+// Fallback static recommendations matching database schema
+const fallbackRecommendations = [
+  {
+    id: 1,
+    name: "Samsung Galaxy S24 Ultra",
+    price: 124999,
+    originalPrice: "₹1,39,999",
+    src: "media/sam.webp",
+    badge: "Best Match",
+    category: "smartphones",
+    desc: "5G, 256GB Storage, AI Camera & S-Pen included",
+    rating: 5
+  },
+  {
+    id: 3,
+    name: "Lenovo Legion Pro 5",
+    price: 144999,
+    originalPrice: "₹1,69,999",
+    src: "media/legion.webp",
+    badge: "High Rated",
+    category: "laptops",
+    desc: "AMD Ryzen 7, RTX 4060, 16GB RAM, 1TB SSD",
+    rating: 5
+  },
+  {
+    id: 6,
+    name: "Buds Pro Gen 2",
+    price: 999,
+    originalPrice: "₹1,999",
+    src: "media/bud.webp",
+    badge: "Top Choice",
+    category: "audio",
+    desc: "Active Noise Cancellation, 40 Hours Playback",
+    rating: 4
+  },
+  {
+    id: 8,
+    name: "Plex Smart Watch Active",
+    price: 2499,
+    originalPrice: "₹4,999",
+    src: "media/plex.webp",
+    badge: "New Product",
+    category: "smartwatches",
+    desc: "Heart rate tracker, SpO2 sensor, Sleep analytics",
+    rating: 5
+  }
+];
+
 const Suggest = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [cartAddingId, setCartAddingId] = useState(null);
-
-  // Fallback static recommendations matching database schema
-  const fallbackRecommendations = [
-    {
-      id: 1,
-      name: "Samsung Galaxy S24 Ultra",
-      price: 124999,
-      originalPrice: "₹1,39,999",
-      src: "media/sam.webp",
-      badge: "Best Match",
-      category: "smartphones",
-      desc: "5G, 256GB Storage, AI Camera & S-Pen included",
-      rating: 5
-    },
-    {
-      id: 3,
-      name: "Lenovo Legion Pro 5",
-      price: 144999,
-      originalPrice: "₹1,69,999",
-      src: "media/legion.webp",
-      badge: "High Rated",
-      category: "laptops",
-      desc: "AMD Ryzen 7, RTX 4060, 16GB RAM, 1TB SSD",
-      rating: 5
-    },
-    {
-      id: 6,
-      name: "Buds Pro Gen 2",
-      price: 999,
-      originalPrice: "₹1,999",
-      src: "media/bud.webp",
-      badge: "Top Choice",
-      category: "audio",
-      desc: "Active Noise Cancellation, 40 Hours Playback",
-      rating: 4
-    },
-    {
-      id: 8,
-      name: "Plex Smart Watch Active",
-      price: 2499,
-      originalPrice: "₹4,999",
-      src: "media/plex.webp",
-      badge: "New Product",
-      category: "smartwatches",
-      desc: "Heart rate tracker, SpO2 sensor, Sleep analytics",
-      rating: 5
-    }
-  ];
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -77,7 +76,6 @@ const Suggest = () => {
               return { ...p, badge: tag };
             });
             setProducts(mapped);
-            setLoading(false);
             return;
           }
         }
@@ -86,7 +84,6 @@ const Suggest = () => {
       }
       // If API fails or yields no results, use fallback data
       setProducts(fallbackRecommendations);
-      setLoading(false);
     };
 
     fetchRecommendations();

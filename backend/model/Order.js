@@ -108,6 +108,39 @@ const orderSchema = new mongoose.Schema(
       default: "Processing",
       enum: ["Processing", "Shipped", "Delivered", "Cancelled"],
     },
+    deliveryPartnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    deliveryStatus: {
+      type: String,
+      enum: ["Unassigned", "Assigned", "Accepted", "Picked Up", "Out for Delivery", "Delivered", "Failed", "Returned"],
+      default: "Unassigned",
+    },
+    deliveryTimeline: [
+      {
+        status: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        description: { type: String },
+      }
+    ],
+    deliveryEta: {
+      type: String,
+      default: "",
+    },
+    deliveryLiveLocation: {
+      lat: { type: Number, default: 12.9716 },
+      lng: { type: Number, default: 77.5946 },
+    },
+    deliveryRating: {
+      type: Number,
+      default: 0,
+    },
+    deliveryFeedback: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

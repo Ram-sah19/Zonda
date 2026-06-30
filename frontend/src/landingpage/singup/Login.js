@@ -56,9 +56,23 @@ function Login() {
     setIsSubmitting(false);
 
     if (result.success) {
-      setApiSuccess("Logged in successfully! Redirecting to Home...");
+      let targetPath = "/";
+      let roleMsg = "Redirecting to Home...";
+      
+      if (result.user && result.user.isAdmin) {
+        targetPath = "/admin";
+        roleMsg = `Redirecting to Admin Dashboard (${result.user.adminRole})...`;
+      } else if (result.user && result.user.isSeller) {
+        targetPath = "/seller";
+        roleMsg = "Redirecting to Seller Dashboard...";
+      } else if (result.user && result.user.isDeliveryPartner) {
+        targetPath = "/delivery/dashboard";
+        roleMsg = "Redirecting to Delivery Partner Dashboard...";
+      }
+
+      setApiSuccess(`Logged in successfully! ${roleMsg}`);
       setTimeout(() => {
-        navigate("/");
+        navigate(targetPath);
       }, 1500);
     } else {
       setApiError(result.error || "Invalid email or password.");
@@ -198,10 +212,16 @@ function Login() {
           </form>
 
           <div className="text-center mt-4">
-            <p className="mb-0 text-muted small">
+            <p className="mb-2 text-muted small">
               Don't have an account?{" "}
               <Link to="/signup" className="text-primary fw-semibold text-decoration-none">
                 Sign Up
+              </Link>
+            </p>
+            <p className="mb-0 text-muted small">
+              Want to deliver with us?{" "}
+              <Link to="/signup-delivery" className="text-success fw-semibold text-decoration-none">
+                Become a Delivery Partner
               </Link>
             </p>
           </div>
